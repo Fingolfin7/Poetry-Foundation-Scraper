@@ -1,8 +1,9 @@
-import re
 import logging
 import requests
 from bs4 import BeautifulSoup
 from clean_encoding import clean
+from check_internet import check_internet
+from ColourText import format_text
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -10,6 +11,10 @@ from selenium.webdriver.remote.remote_connection import LOGGER
 
 
 def scrape_poem(title, poet=""):
+    if not check_internet():
+        print(format_text(f"[bright red]No internet connection :([reset]"))
+        return None, None, None
+
     base_url = "https://www.poetryfoundation.org"
 
     search_url = f"{base_url}/search?query={title}"
@@ -71,9 +76,11 @@ def scrape_poem(title, poet=""):
 
     poem_title = clean(poem_title)
     poem_poet = clean(poem_poet)
+    print(poem_body)
+    print(poem_body)
     poem_body = clean(poem_body)
     return poem_title, poem_poet, poem_body
 
 
 if __name__ == "__main__":
-    scrape_poem("Fire and Ice", "Robert Frost")
+    scrape_poem("Once more unto the breach", "William Shakespeare")

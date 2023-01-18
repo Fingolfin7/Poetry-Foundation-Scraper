@@ -1,4 +1,5 @@
 import os
+from pathvalidate import sanitize_filename
 
 
 def save_to_file(title, poet, poem,
@@ -8,6 +9,7 @@ def save_to_file(title, poet, poem,
         file_type = '.' + file_type
 
     filename = f"{title} by {poet}{file_type}"
+    filename = sanitize_filename(filename)
 
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)

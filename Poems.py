@@ -3,10 +3,7 @@ import json
 import random
 from scraper import scrape_poem
 from ColourText import format_text
-from save_to_file import save_to_file
 from check_internet import check_internet
-from poems_list import make_list
-from time_func import time_func
 
 
 class Poems:
@@ -82,35 +79,3 @@ class Poems:
                     print(format_text(f"[bright yellow][italic]{index + 1}. {poem_title}[reset]"))
                 print()
         return None, None, None
-
-
-@time_func
-def fill():
-    for pair in make_list():
-        for title in pair[1]:
-            poems.search(title, pair[0])
-
-if __name__ == "__main__":
-    poems = Poems()
-    while True:
-        # print(poems.random_poem())
-        name = input("Enter poem name: ")
-        poet = input("Enter poet: ")
-
-        title, poet, poem = poems.search(f"{name}", f"{poet}")
-
-        poem = format_text("[italics]{}[reset]".format(poem))
-        if poem is not None:
-            print(poem)
-
-            x = input(
-                format_text("\n[cyan]Save to file?[reset]\n[Y/N]:")
-            ).lower()
-
-            if x == 'y':
-                save_to_file(title, poet, poem)
-
-        print("\n")
-
-
-    """fill()"""

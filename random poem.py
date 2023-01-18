@@ -7,16 +7,11 @@ from ColourText import format_text
 def main():
     poems = Poems()
     os.system('')
-
+    
     while True:
-        # print(poems.random_poem())
-        name = input("Enter poem name: ")
-        poet = input("Enter poet: ")
-
-        title, poet, poem = poems.search(f"{name}", f"{poet}")
-
+        title, poet, poem = poems.random_poem()
+        poem = format_text("[italics]{}[reset]".format(poem))
         if poem is not None:
-            poem = format_text("[italics]{}[reset]".format(poem))
             print(poem)
 
             x = input(
@@ -24,7 +19,7 @@ def main():
             ).lower()
 
             if x == 'y':
-                save_to_file(title, poet, poem, ".txt", "File Saves")
+                save_to_file(title, poet, poem)
 
         print("\n")
 
