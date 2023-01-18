@@ -11,10 +11,6 @@ from selenium.webdriver.remote.remote_connection import LOGGER
 
 
 def scrape_poem(title, poet=""):
-    if not check_internet():
-        print(format_text(f"[bright red]No internet connection :([reset]"))
-        return None, None, None
-
     base_url = "https://www.poetryfoundation.org"
 
     search_url = f"{base_url}/search?query={title}"
@@ -55,7 +51,7 @@ def scrape_poem(title, poet=""):
     options.add_argument('headless')
     options.add_argument('window-size=1200x600')
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     driver.get(link)
     data = driver.page_source
 
@@ -76,8 +72,6 @@ def scrape_poem(title, poet=""):
 
     poem_title = clean(poem_title)
     poem_poet = clean(poem_poet)
-    print(poem_body)
-    print(poem_body)
     poem_body = clean(poem_body)
     return poem_title, poem_poet, poem_body
 

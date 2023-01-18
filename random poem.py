@@ -10,8 +10,9 @@ def main():
     
     while True:
         title, poet, poem = poems.random_poem()
-        poem = format_text("[italics]{}[reset]".format(poem))
+
         if poem is not None:
+            poem = format_text("[italics]{}[reset]".format(poem))
             print(poem)
 
             x = input(
