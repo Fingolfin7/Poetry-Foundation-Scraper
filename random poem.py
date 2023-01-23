@@ -20,7 +20,7 @@ def main():
             ).lower()
 
             if x == 'y':
-                save_to_file(title, poet, poem)
+                save_to_file(title, poet, poem, ".txt", "File Saves")
 
         print("\n")
 

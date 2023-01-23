@@ -31,9 +31,9 @@ class Poems:
 
     def save(self):
         json_data = json.dumps(self.__dict, indent=4)
-        js_writer = open(self.path, "w")
-        js_writer.write(json_data)
-        js_writer.close()
+        with open(self.path, "w") as js_writer:
+            js_writer.write(json_data)
+            js_writer.close()
 
     def random_poem(self):
         poem_list = []
