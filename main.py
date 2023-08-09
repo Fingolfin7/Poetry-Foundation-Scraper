@@ -10,8 +10,8 @@ def main():
 
     while True:
         # print(poems.random_poem())
-        name = input("Enter poem name: ")
-        poet = input("Enter poet: ")
+        name = input("Enter poem name: ").strip()
+        poet = input("Enter poet: ").strip()
 
         title, poet, poem = poems.search(f"{name}", f"{poet}")
 
@@ -25,9 +25,13 @@ def main():
 
             if x == 'y':
                 save_to_file(title, poet, poem, ".txt", "File Saves")
+            input("Press enter to continue...")
 
         print("\n")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting...")

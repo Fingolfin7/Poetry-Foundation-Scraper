@@ -140,6 +140,14 @@ cython_debug/
 # General
 *.xml
 *.iml
+/.idea/
 /File Saves
 fill.py
 /myvenv
+Bing GUI.py
+poems_list.py
+new_poems.txt
+backup.json
+.idea/Poems.iml
+.idea/misc.xml
+poems.json

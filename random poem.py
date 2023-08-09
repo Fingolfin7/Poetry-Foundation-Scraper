@@ -21,9 +21,13 @@ def main():
 
             if x == 'y':
                 save_to_file(title, poet, poem, ".txt", "File Saves")
+            input("Press enter to continue...")
 
         print("\n")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting...")
