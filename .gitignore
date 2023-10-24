@@ -151,3 +151,4 @@ backup.json
 .idea/Poems.iml
 .idea/misc.xml
 poems.json
+/chromedriver/

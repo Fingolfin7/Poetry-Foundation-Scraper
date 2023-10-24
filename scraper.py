@@ -77,10 +77,11 @@ def scrape_poem(title, poet=""):
     try:
         driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
     except ValueError:
-        try:
-            driver = webdriver.Chrome(ChromeDriverManager(version="114.0.5735.90").install(), options=options)
-        except ValueError:
-            driver = webdriver.Chrome(service=Service(), options=options)
+        print(format_text(f"[bright red]Couldn't find chrome driver for latest version, trying downloaded version[reset]"))
+        # driver = webdriver.Chrome(ChromeDriverManager(version="118.0.5993.70").install(), options=options)
+        driver = webdriver.Chrome(executable_path='chromedriver/chromedriver.exe', options=options)
+
+
     driver.get(link)
     data = driver.page_source
 
