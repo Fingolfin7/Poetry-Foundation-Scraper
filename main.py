@@ -1,5 +1,6 @@
 import os
 from Poems import Poems
+from clean_encoding import clean
 from save_to_file import save_to_file
 from ColourText import format_text
 
@@ -12,6 +13,13 @@ def main():
         # print(poems.random_poem())
         search_name = input("Enter poem name: ").strip()
         search_poet = input("Enter poet: ").strip()
+
+        # clean the input to match the format in the poems.json file
+        search_name = clean(search_name)
+        search_poet = clean(search_poet)
+
+        # print(f"Reformatted search name: {search_name}")
+        # print(f"Reformatted search poet: {search_poet}")
 
         title, poet, poem = poems.search(search_name, search_poet)
 
