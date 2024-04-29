@@ -44,10 +44,9 @@ def scrape_poem(title, poet=""):
     # set log level for driver only to error
     LOGGER.setLevel(logging.ERROR)
 
-
     manager = ChromeDrivers()
     driver = manager.get_driver()
-
+    print()
 
     driver.get(link)
     data = driver.page_source
