@@ -38,7 +38,7 @@ def main():
             print(format_text(f"\n[cyan]Searching for poems by {search_poet}...[reset]"))
             poems.list_all_by_poet(search_poet)
 
-            print(format_text(f"\n[cyan]Searching for any poems with the term [italic]{search_name}[reset]"
+            print(format_text(f"\n[cyan]Searching for any poems with the term(s) [italic]{search_name}[reset]"
                               f"[cyan]...[reset]\n"))
             poems.search_poems_with_term(search_name)
 

@@ -3,35 +3,10 @@ import requests
 from bs4 import BeautifulSoup
 from clean_encoding import clean
 from check_internet import check_internet
-from ColourText import format_text
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from ChromeDrivers import ChromeDrivers
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.remote_connection import LOGGER
 
-
-"""def get_chrome_driver():
-    # set log level for driver only to error
-    LOGGER.setLevel(logging.ERROR)
-
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    options.add_argument('window-size=1200x600')
-
-    try:  # try to get the latest chrome driver
-        return webdriver.Chrome(service=Service(), options=options)
-    except ...:
-        print(format_text(f"[bright red]Couldn't find chrome driver for latest version, trying other versions[reset]"))
-        versions_to_try = ["114.0.5735.90", "2.46"]  # Add other versions if needed
-        for version in versions_to_try:
-            try:
-                driver = webdriver.Chrome(ChromeDriverManager(version=version).install(), options=options)
-                return driver
-            except ValueError:
-                print(format_text(f"[bright red]Couldn't find chrome driver for version: {version}[reset]"))
-                pass
-    raise Exception("Failed to find a suitable ChromeDriver.")
-"""
 
 
 def scrape_poem(title, poet=""):
@@ -61,7 +36,7 @@ def scrape_poem(title, poet=""):
     if link != "":
         link = base_url + link
     else:
-        message = f"Couldn't find {title}"
+        message = f"Couldn't find '{title}'"
         if poet != "":
             message += f" by {poet}"
         raise Exception(message)
@@ -69,17 +44,9 @@ def scrape_poem(title, poet=""):
     # set log level for driver only to error
     LOGGER.setLevel(logging.ERROR)
 
-    # set chromedriver options to not open the Chrome window
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    options.add_argument('window-size=1200x600')
 
-    try:
-        driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-    except ValueError:
-        print(format_text(f"[bright red]Couldn't find chrome driver for latest version, trying downloaded version[reset]"))
-        # driver = webdriver.Chrome(ChromeDriverManager(version="118.0.5993.70").install(), options=options)
-        driver = webdriver.Chrome(executable_path='chromedriver/chromedriver.exe', options=options)
+    manager = ChromeDrivers()
+    driver = manager.get_driver()
 
 
     driver.get(link)
