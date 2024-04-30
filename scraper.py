@@ -72,9 +72,6 @@ if __name__ == "__main__":
     from random import choice
 
     searchables = [("Once more unto the breach", "William Shakespeare"),
-                   ("The Raven", "Edgar Allan Poe"),
-                   ("The Waste Land", "T. S. Eliot"),
-                   ("The Love Song of J. Alfred Prufrock", "T. S. Eliot"),
                    ("The Road Not Taken", "Robert Frost"),
                    ("The Second Coming", "William Butler Yeats"),
                    ("Do not go gentle into that good night", "Dylan Thomas"),
