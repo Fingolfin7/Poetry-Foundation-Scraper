@@ -1,4 +1,5 @@
 import json
+import logging
 import shutil
 import zipfile
 import subprocess
@@ -11,13 +12,20 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class ChromeDrivers:
-    def __init__(self):
-        self.CHROMEDRIVER_PATH = "chromedriver"
+    def __init__(self, chromedriver_path="chromedriver", log_level=logging.ERROR):
+        self.CHROMEDRIVER_PATH = chromedriver_path
+
+        self.logger = logging.getLogger(__name__)
+        logHandler = logging.StreamHandler(sys.stdout)
+        logHandler.setFormatter(logging.Formatter('%(filename)s:%(lineno)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(logHandler)
+        self.logger.setLevel(log_level)
+
+        self.GOOGLE_API = "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
         self.PLATFORM = "win64" if sys.maxsize > 2 ** 32 else "win32"
 
     def __download_version(self, version_number):
-        api_path = "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
-        response = requests.get(api_path)
+        response = requests.get(self.GOOGLE_API)
         data = response.json().get('versions')
 
         download_url = ""
@@ -31,7 +39,8 @@ class ChromeDrivers:
                 break
 
         if download_url == "":
-            print(format_text(f"[bright red]Couldn't find download URL for version {version_number}[reset]"))
+            self.logger.log(logging.ERROR,
+                            format_text(f"[bright red]Couldn't find download URL for version {version_number}[reset]"))
             return False
 
         # download zip file
@@ -66,7 +75,8 @@ class ChromeDrivers:
     def __get_browser_version(self):
         try:
             # Check if the Chrome folder exists in the x32 or x64 Program Files folders.
-            path = 'C:\\Program Files' + (' (x86)' if self.PLATFORM == 'win64' else '') + '\\Google\\Chrome\\Application'
+            path = f'C:\\Program Files {("(x86)" if self.PLATFORM == "win64" else "")}\\Google\\Chrome\\Application'
+
             if os.path.isdir(path):
                 paths = [f.path for f in os.scandir(path) if f.is_dir()]
                 for path in paths:
@@ -78,46 +88,53 @@ class ChromeDrivers:
                         return match.group(0)
 
         except Exception as e:
-            print("Error:", e)
+            self.logger.log(logging.ERROR, format_text(f"[bright red]Error: {e}[reset]"))
             return None
 
         return None
 
     def __get_driver_versions(self):
         # check for local chromedriver version
-        result = subprocess.run([f"{self.CHROMEDRIVER_PATH}/chromedriver.exe", "--version"], capture_output=True, text=True)
+        result = subprocess.run([f"{self.CHROMEDRIVER_PATH}/chromedriver.exe", "--version"], capture_output=True,
+                                text=True)
         output = result.stdout.strip()
         local_driver_version = output.split(" ")[1]  # get the version number
-        print(f"Local chromedriver version: {local_driver_version}")
+        self.logger.log(logging.DEBUG, format_text(f"Local chromedriver version: [cyan]{local_driver_version}[reset]"))
 
         # check for Chrome browser version
         browser_version = self.__get_browser_version()
-        print(f"Browser version: {browser_version}")
+        self.logger.log(logging.DEBUG, format_text(f"Browser version: [cyan]{browser_version}[reset]"))
 
         # check for latest chromedriver version online
-        api_path = "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
-        response = requests.get(api_path)
+        response = requests.get(self.GOOGLE_API)
         data = response.json().get('versions')
 
         online_driver_version = data[-1].get('version')
-        print(f"Latest online chromedriver version: {online_driver_version}")
+        self.logger.log(logging.DEBUG,
+                        format_text(f"Latest online chromedriver version: [cyan]{online_driver_version}[reset]"))
 
         return browser_version, online_driver_version, local_driver_version
 
     def download_chromedriver(self):
-        browser_version, online_version, _ = self.__get_driver_versions()
+        browser_version, online_version, local_version = self.__get_driver_versions()
 
-        if ".".join(browser_version.split(".")[:-1]) in online_version:  # compare the first 3 numbers of actual version
-            print(f"\nDownloading browser version {browser_version}...")
+        if ".".join(local_version.split(".")[:-1]) in browser_version:  # compare the first 3 numbers of actual version
+            self.logger.log(logging.INFO,
+                            format_text(f"[bright green]Local chromedriver is compatible with browser version[reset]")
+                            )
+        else:
+            self.logger.log(logging.WARNING,
+                            format_text(f"Local chromedriver is not compatible with browser version."
+                                        f"Downloading chromedriver version [cyan]{browser_version}[reset]...")
+                            )
 
             if self.__download_version(browser_version):
-                print(format_text(f"[bright green]Download successful[reset]"))
+                self.logger.log(logging.INFO, format_text(f"[bright green]Download successful![reset]"))
             else:
-                print(format_text(f"[bright red]Download failed[reset]"))
-        else:
-            print(format_text(f"[bright green]\nLocal chromedriver is up to date[reset]"))
+                self.logger.log(logging.ERROR, format_text(
+                    f"[bright red]Failed to download chromedriver for browser version {browser_version}[reset]"))
 
-    def get_driver(self, options=None):
+    def get_driver(self, options: webdriver.ChromeOptions = None):
         """
         Get the chromedriver with the specified options. Downloads driver compatible with the current Chrome version if
         default driver is not found.
@@ -133,16 +150,14 @@ class ChromeDrivers:
         try:
             return webdriver.Chrome(ChromeDriverManager().install(), options=options)
         except ValueError:
-            print(format_text(
-                f"[bright red]Couldn't find chrome driver for latest version, trying downloaded version\n[reset]"))
+            self.logger.log(logging.WARNING, format_text(
+                f"[bright red]Couldn't find chrome driver for latest version, trying downloaded version[reset]"))
 
-            print(format_text(f"[cyan]Downloading chromedriver...[reset]"))
             self.download_chromedriver()
 
             return webdriver.Chrome(executable_path='chromedriver/chromedriver.exe', options=options)
 
 
-
 if __name__ == "__main__":
-    manager = ChromeDrivers()
+    manager = ChromeDrivers(log_level=logging.DEBUG)
     driver = manager.get_driver()

@@ -2,9 +2,7 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 from clean_encoding import clean
-from check_internet import check_internet
 from ChromeDrivers import ChromeDrivers
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.remote_connection import LOGGER
 
 
@@ -44,13 +42,9 @@ def scrape_poem(title, poet=""):
     # set log level for driver only to error
     LOGGER.setLevel(logging.ERROR)
 
-    manager = ChromeDrivers()
-    driver = manager.get_driver()
-    print()
-
+    driver = ChromeDrivers().get_driver()
     driver.get(link)
     data = driver.page_source
-
     driver.quit()
 
     html = BeautifulSoup(data, "lxml")
@@ -75,4 +69,32 @@ def scrape_poem(title, poet=""):
 
 
 if __name__ == "__main__":
-    print(scrape_poem("Once more unto the breach", "William Shakespeare"))
+    from random import choice
+
+    searchables = [("Once more unto the breach", "William Shakespeare"),
+                   ("The Raven", "Edgar Allan Poe"),
+                   ("The Waste Land", "T. S. Eliot"),
+                   ("The Love Song of J. Alfred Prufrock", "T. S. Eliot"),
+                   ("The Road Not Taken", "Robert Frost"),
+                   ("The Second Coming", "William Butler Yeats"),
+                   ("Do not go gentle into that good night", "Dylan Thomas"),
+                   ("Ozymandias", "Percy Bysshe Shelley"),
+                   ("If—", "Rudyard Kipling"),
+                   ("The Tyger", "William Blake"),
+                   ("Kubla Khan", "Samuel Taylor Coleridge"),
+                   ("Ode to a Nightingale", "John Keats"),
+                   ("She Walks in Beauty", "Lord Byron"),
+                   ("The Charge of the Light Brigade", "Alfred, Lord Tennyson"),
+                   ("To His Coy Mistress", "Andrew Marvell"),
+                   ("Sonnet 18", "William Shakespeare")]
+
+    random_pick = choice(searchables)
+    title, poet = random_pick
+    print(f"Searching for: {title} by {poet}")
+    try:
+        _, _, poem = scrape_poem(title, poet)
+        print(poem)
+    except Exception as e:
+        print(e)
+
+
