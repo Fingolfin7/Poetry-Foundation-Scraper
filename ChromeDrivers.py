@@ -15,6 +15,9 @@ class ChromeDrivers:
     def __init__(self, chromedriver_path="chromedriver", log_level=logging.ERROR):
         self.CHROMEDRIVER_PATH = chromedriver_path
 
+        if not os.path.exists(self.CHROMEDRIVER_PATH):
+            os.makedirs(self.CHROMEDRIVER_PATH)
+
         self.logger = logging.getLogger(__name__)
         logHandler = logging.StreamHandler(sys.stdout)
         logHandler.setFormatter(logging.Formatter('%(filename)s:%(lineno)s - %(levelname)s - %(message)s'))
@@ -94,12 +97,18 @@ class ChromeDrivers:
         return None
 
     def __get_driver_versions(self):
-        # check for local chromedriver version
-        result = subprocess.run([f"{self.CHROMEDRIVER_PATH}/chromedriver.exe", "--version"], capture_output=True,
-                                text=True)
-        output = result.stdout.strip()
-        local_driver_version = output.split(" ")[1]  # get the version number
-        self.logger.log(logging.DEBUG, format_text(f"Local chromedriver version: [cyan]{local_driver_version}[reset]"))
+        # check if chromedriver file exists
+        if not os.path.exists(f"{self.CHROMEDRIVER_PATH}/chromedriver.exe"):
+            self.logger.log(logging.WARNING, format_text(
+                f"[bright red]Chromedriver not found in {self.CHROMEDRIVER_PATH} folder[reset]"))
+            local_driver_version = "0.0.0"
+        else:
+            # check for local chromedriver version
+            result = subprocess.run([f"{self.CHROMEDRIVER_PATH}/chromedriver.exe", "--version"], capture_output=True,
+                                    text=True)
+            output = result.stdout.strip()
+            local_driver_version = output.split(" ")[1]  # get the version number
+            self.logger.log(logging.DEBUG, format_text(f"Local chromedriver version: [cyan]{local_driver_version}[reset]"))
 
         # check for Chrome browser version
         browser_version = self.__get_browser_version()
@@ -124,8 +133,8 @@ class ChromeDrivers:
                             )
         else:
             self.logger.log(logging.WARNING,
-                            format_text(f"Local chromedriver is not compatible with browser version."
-                                        f"Downloading chromedriver version [cyan]{browser_version}[reset]...")
+                            format_text(f"Local chromedriver is not compatible with browser version. "
+                                        f"Downloading chromedriver for browser version [cyan]{browser_version}[reset]...")
                             )
 
             if self.__download_version(browser_version):
