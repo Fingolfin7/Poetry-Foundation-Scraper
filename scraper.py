@@ -94,9 +94,7 @@ def scrape_poem(title, poet=""):
         raise Exception(message)
 
     driver.get(link)
-    # --- REVISED WAIT: Wait for the central poem-body div ---
     try:
-        # This is the most reliable element for the actual poem text
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'poem-body'))
         )
@@ -109,7 +107,7 @@ def scrape_poem(title, poet=""):
 
     html_soup = BeautifulSoup(data, "lxml")
 
-    [h.extract() for h in html_soup(['style', 'script'])]
+    [s.extract() for s in html_soup(['style', 'script'])]
 
     print("\n--- Starting Poem Content Extraction ---")
     print(f"Current URL: {link}")
@@ -118,115 +116,116 @@ def scrape_poem(title, poet=""):
     poem_poet = ""
     poem_body = ""
 
-    # --- NEW: Find the poem_container based on its unique children ---
-    poem_container = None
+    # --- CORE LOGIC FOR POEM PAGE EXTRACTION ---
 
-    # Iterate through all <div> and <article> tags, looking for one that *contains*
-    # an <h1>/<h2> (title), a "By" span (poet), and the "poem-body" div.
-    potential_wrappers = html_soup.find_all(['div', 'article'])
+    # 1. Find the main poem body div (our reliable anchor)
+    poem_body_content_div = html_soup.find('div', class_='poem-body')
 
-    print(f"Number of potential wrappers to check: {len(potential_wrappers)}")
-    for i, wrapper in enumerate(potential_wrappers):
-        # Must have a primary title within it
-        has_title = wrapper.find(['h1', 'h2'])
+    if not poem_body_content_div:
+        raise Exception("Couldn't find the main 'poem-body' div.")
 
-        # Must have a poet's byline within it
-        has_poet = wrapper.find('span', class_=lambda x: x and 'c-byline' in x) or \
-                   re.search(r'(?i)By\s+([A-Za-z.\s\-]+)', wrapper.get_text()[:500])  # Look for "By" in first 500 chars
+    print("--- 'poem-body' div identified. ---")
 
-        # Must contain the specific poem body div
-        has_poem_body_div = wrapper.find('div', class_='poem-body')
-
-        # if i < 10: # Print only first few for brevity
-        #     print(f"  Checking wrapper {i+1} (<{wrapper.name}>). Title: {bool(has_title)}, Poet: {bool(has_poet)}, PoemBodyDiv: {bool(has_poem_body_div)}")
-
-        if has_title and has_poet and has_poem_body_div:
-            poem_container = wrapper
-            print(
-                f"  Selected wrapper {i + 1} as poem_container: <{wrapper.name}> (Snippet: {wrapper.get_text(strip=True)[:100]}...)")
-            break
-
-    if not poem_container:
-        raise Exception("Couldn't identify the main poem content container based on unique children.")
-    else:
-        print("--- Poem container identified. ---")
-        # print(f"Poem container prettified (first 500 chars):\n{poem_container.prettify()[:500]}...")
-
-    # --- Extracting Title within the identified poem_container ---
-    title_element = poem_container.find(['h1', 'h2'])  # Find the most prominent heading
-    if title_element:
-        poem_title = title_element.get_text(separator=" ", strip=True)
-        print(f"Extracted Poem Title: '{poem_title}'")
-    else:
-        print("Warning: No primary title element (h1/h2) found within poem_container.")
-
-    # --- Extracting Poet within the identified poem_container ---
-    poem_poet = ""
-    # Try finding the specific byline span
-    poet_span = poem_container.find('span', class_=lambda x: x and 'c-byline' in x)
-    if poet_span:
-        poet_link = poet_span.find('a', class_='c-byline_link')
-        if poet_link:
-            poem_poet = poet_link.get_text(strip=True)
-            print(f"Extracted Poem Poet (from link): '{poem_poet}'")
-        else:  # Fallback to span text if no link, remove "By" if present
-            raw_poet_text = poet_span.get_text(strip=True)
-            if raw_poet_text.lower().startswith('by '):
-                poem_poet = raw_poet_text[3:].strip()
-            else:
-                poem_poet = raw_poet_text
-            print(f"Extracted Poem Poet (from span): '{poem_poet}'")
-
-    # Fallback to general regex search within poem_container if specific span not found
-    if not poem_poet:
-        match = re.search(r'(?i)By\s+([A-Za-z.\s\-]+)', poem_container.get_text())
-        if match:
-            poem_poet = match.group(1).strip()
-            print(f"Extracted Poem Poet (regex fallback on container): '{poem_poet}'")
-        else:
-            print("Warning: No poet found via any method within poem_container.")
-
-    # --- REVISED: Extract Body based on div.poem-body ---
+    # 2. Extract Body Text (this part is already working well)
     poem_lines_extracted = []
 
-    # Directly find the div with class "poem-body" within the identified poem_container
-    poem_body_container = poem_container.find('div', class_='poem-body')
+    line_divs = poem_body_content_div.find_all('div', style=lambda s: s and 'text-indent' in s)
+    if not line_divs:
+        line_divs = poem_body_content_div.find_all('div')
 
-    if poem_body_container:
-        # Each line is in its own <div> (often with inline style) with a <span> inside it.
-        # Target divs with style attribute and look for span or direct text.
-        line_divs = poem_body_container.find_all('div', style=lambda s: s and 'text-indent' in s)
+    for line_div in line_divs:
+        line_text = ""
+        span_tag = line_div.find('span')
+        if span_tag:
+            line_text = span_tag.get_text(strip=True)
+        else:
+            line_text = line_div.get_text(strip=True)
 
-        if not line_divs:  # Fallback if `text-indent` style isn't always present for all lines
-            line_divs = poem_body_container.find_all('div')  # Just get all divs if no style
-
-        for line_div in line_divs:
-            line_text = ""
-            span_tag = line_div.find('span')
-            if span_tag:
-                line_text = span_tag.get_text(strip=True)
-            else:
-                # If no span, get text directly from line_div
-                line_text = line_div.get_text(strip=True)
-
-            if line_text:  # Ensure the line isn't empty
-                poem_lines_extracted.append(line_text)
-            # You might want to detect empty divs/lines for stanza breaks here,
-            # but for now, just collecting non-empty lines.
+        if line_text:
+            poem_lines_extracted.append(line_text)
 
     if not poem_lines_extracted:
-        print("Warning: No poem body text found in expected locations (div.poem-body > div > span/text).")
+        print("Warning: No poem body text found in expected locations within 'poem-body' div.")
 
-    poem_body = "\n".join(poem_lines_extracted)  # Use single newline for lines within a stanza
+    poem_body = "\n".join(poem_lines_extracted)
     print(f"\n--- Extracted Poem Body (first 500 chars):\n{poem_body[:500]}...")
     print(f"Total Body Length: {len(poem_body)}")
 
-    # Final cleaning (after initial extraction)
+    # --- REVISED: Extract Title and Poet by traversing relative to poem_body_content_div ---
+
+    # Try to find the parent div (c-feature-bd) first
+    c_feature_bd = poem_body_content_div.find_parent('div', class_='c-feature-bd')
+
+    # If c_feature_bd found, then its previous siblings should be poet and title containers
+    if c_feature_bd:
+        print("--- Found parent 'c-feature-bd'. Now looking for siblings. ---")
+        # Look for previous siblings: c-feature-sub (poet) and c-feature-hd (title)
+
+        # Find poet div first (c-feature-sub)
+        poet_div = c_feature_bd.find_previous_sibling('div', class_='c-feature-sub')
+        if poet_div:
+            poet_span = poet_div.find('span', class_='c-byline')
+            if poet_span:
+                poet_link = poet_span.find('a', class_='c-byline_link')
+                if poet_link:
+                    poem_poet = poet_link.get_text(strip=True)
+                    print(f"Extracted Poem Poet (from c-byline link): '{poem_poet}'")
+                else:
+                    raw_poet_text = poet_span.get_text(strip=True)
+                    if raw_poet_text.lower().startswith('by '):
+                        poem_poet = raw_poet_text[3:].strip()
+                    else:
+                        poem_poet = raw_poet_text
+                    print(f"Extracted Poem Poet (from c-byline span): '{poem_poet}'")
+
+        # Find title div next (c-feature-hd)
+        title_div = c_feature_bd.find_previous_sibling('div', class_='c-feature-hd')
+        if title_div:
+            title_element = title_div.find('h1', class_='c-feature-title')
+            if not title_element:  # Fallback to h2 if no h1
+                title_element = title_div.find('h2',
+                                               class_='c-feature-title')  # Assuming c-feature-title might apply to h2
+            if not title_element:  # Fallback to generic h1/h2 if class not used
+                title_element = title_div.find(['h1', 'h2'])
+
+            if title_element:
+                poem_title = title_element.get_text(separator=" ", strip=True)
+                print(f"Extracted Poem Title: '{poem_title}'")
+            else:
+                print("Warning: No specific title element found within c-feature-hd.")
+        else:
+            print("Warning: No 'c-feature-hd' div found as previous sibling.")
+
+    else:  # Fallback if 'c-feature-bd' structure isn't found (less specific search)
+        print("Warning: 'c-feature-bd' not found as parent of 'poem-body'. Falling back to general search.")
+        # Revert to a general search for title/poet anywhere in the document, but less precise.
+        # This part will likely be messy or empty if the specific structure is the dominant one.
+        title_element_fallback = html_soup.find(['h1', 'h2'])
+        if title_element_fallback:
+            poem_title = title_element_fallback.get_text(separator=" ", strip=True)
+            print(f"Extracted Poem Title (fallback): '{poem_title}'")
+
+        poet_span_fallback = html_soup.find('span', class_=lambda x: x and 'c-byline' in x)
+        if poet_span_fallback:
+            poem_poet = poet_span_fallback.get_text(strip=True).replace("By", "").strip()
+            print(f"Extracted Poem Poet (fallback): '{poem_poet}'")
+        else:  # Generic regex on entire soup for a last resort
+            match = re.search(r'(?i)By\s+([A-Za-z.\s\-]+)', html_soup.get_text())
+            if match:
+                poem_poet = match.group(1).strip()
+                print(f"Extracted Poem Poet (regex fallback on whole document): '{poem_poet}'")
+
+    if not poem_title:
+        print("Final Warning: Poem Title remains empty.")
+    if not poem_poet:
+        print("Final Warning: Poem Poet remains empty.")
+
+    # Final cleaning
     poem_title = clean(poem_title)
     poem_poet = clean(poem_poet)
     poem_body = clean(poem_body)
 
-    # These specific replacements might not be needed if extraction is clean
+    # These specific replacements should ideally no longer be needed with precise extraction
     poem_title = poem_title.replace("Launch Audio in a New Window", "").strip()
     poem_poet = poem_poet.replace("Launch Audio in a New Window", "").strip()
 
