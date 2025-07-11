@@ -23,7 +23,8 @@ def main():
 
         title, poet, poem = poems.search(search_name, search_poet)
 
-        if poem is not None:
+        if poem:
+            poem = clean(poem, False)
             poem = format_text("[italics]{}[reset]".format(poem))
             print(poem)
 

@@ -2,10 +2,13 @@ import re
 import unidecode
 
 
-def clean(in_string=""):
-    in_string = in_string.strip("​")
-    in_string = re.sub("[•]", "", in_string)
+def clean(in_string="", add_line_breaks=False):
+    in_string = re.sub(r"[•]", "", in_string)
     in_string = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', "", in_string)
+
+    if add_line_breaks:
+        in_string = re.sub(r'\s{2,}(?=[A-Z])', '\n', in_string)
+
     in_string = unidecode.unidecode(in_string)
 
     try:

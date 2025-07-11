@@ -1,6 +1,8 @@
-beautifulsoup4==4.12.2
-pathvalidate==3.1.0
-requests==2.28.1
-selenium==4.11.2
-Unidecode==1.2.0
-webdriver_manager==4.0.0
+beautifulsoup4
+pathvalidate
+requests
+selenium
+Unidecode
+webdriver_manager
+googlesearch-python
+lxml

@@ -5,9 +5,11 @@ import zipfile
 import subprocess
 import os, sys
 import re
+import winreg
 import requests
 from ColourText import format_text
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 
@@ -75,25 +77,22 @@ class ChromeDrivers:
         # if everything went well, return True
         return True
 
+
     def __get_browser_version(self):
         try:
-            # Check if the Chrome folder exists in the x32 or x64 Program Files folders.
-            path = f'C:\\Program Files {("(x86)" if self.PLATFORM == "win64" else "")}\\Google\\Chrome\\Application'
-
-            if os.path.isdir(path):
-                paths = [f.path for f in os.scandir(path) if f.is_dir()]
-                for path in paths:
-                    filename = os.path.basename(path)
-                    pattern = '\d+\.\d+\.\d+\.\d+'
-                    match = re.search(pattern, filename)
-                    if match and match.group():
-                        # Found a Chrome version.
-                        return match.group(0)
-
+            reg_locations = [
+                (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Google\Chrome\BLBeacon"),
+                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Google\Chrome\BLBeacon")
+            ]
+            for hive, path in reg_locations:
+                try:
+                    with winreg.OpenKey(hive, path) as key:
+                        version, _ = winreg.QueryValueEx(key, "version")
+                        return version
+                except FileNotFoundError:
+                    continue
         except Exception as e:
             self.logger.log(logging.ERROR, format_text(f"[bright red]Error: {e}[reset]"))
-            return None
-
         return None
 
     def __get_driver_versions(self):
@@ -157,16 +156,18 @@ class ChromeDrivers:
             options.add_argument('headless')  # don't open the browser window
 
         try:
-            return webdriver.Chrome(ChromeDriverManager().install(), options=options)
-        except ValueError:
+            return webdriver.Chrome(options=options)
+        except (ValueError, OSError) as e:
             self.logger.log(logging.WARNING, format_text(
                 f"[bright red]Couldn't find chrome driver for latest version, trying downloaded version[reset]"))
 
             self.download_chromedriver()
 
-            return webdriver.Chrome(executable_path='chromedriver/chromedriver.exe', options=options)
+            service = Service(os.path.join(self.CHROMEDRIVER_PATH, 'chromedriver.exe'))
+            return webdriver.Chrome(service=service, options=options)
 
 
 if __name__ == "__main__":
     manager = ChromeDrivers(log_level=logging.DEBUG)
     driver = manager.get_driver()
+    print(format_text(f"[green]ChromeDriver initialized successfully![reset]"))
