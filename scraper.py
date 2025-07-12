@@ -288,21 +288,21 @@ if __name__ == "__main__":
 
     scraper_instance = PoetryScraper(log_level=logging.INFO)
     searchables = [
-        # ("Once more unto the breach", "William Shakespeare"),
-        # ("The Road Not Taken", "Robert Frost"),
-        # ("The Second Coming", "William Butler Yeats"),
-        # ("Do not go gentle into that good night", "Dylan Thomas"),
-        # ("Ozymandias", "Percy Bysshe Shelley"),
-        # ("If", "Rudyard Kipling"),
+        ("Once more unto the breach", "William Shakespeare"),
+        ("The Road Not Taken", "Robert Frost"),
+        ("The Second Coming", "William Butler Yeats"),
+        ("Do not go gentle into that good night", "Dylan Thomas"),
+        ("Ozymandias", "Percy Bysshe Shelley"),
+        ("If", "Rudyard Kipling"),
         ("The Tyger", "William Blake"),
-        # ("Kubla Khan", "Samuel Taylor Coleridge"),
-        # ("Ode to a Nightingale", "John Keats"),
-        # ("She Walks in Beauty", "Lord Byron"),
-        # ("The Charge of the Light Brigade", "Alfred, Lord Tennyson"),
-        # ("To His Coy Mistress", "Andrew Marvell"),
-        # ("Sonnet 18", "William Shakespeare"),
-        # ("Stopping by Woods on a Snowy Evening", "Robert Frost"),
-        # ("Still I Rise", "Maya Angelou"),
+        ("Kubla Khan", "Samuel Taylor Coleridge"),
+        ("Ode to a Nightingale", "John Keats"),
+        ("She Walks in Beauty", "Lord Byron"),
+        ("The Charge of the Light Brigade", "Alfred, Lord Tennyson"),
+        ("To His Coy Mistress", "Andrew Marvell"),
+        ("Sonnet 18", "William Shakespeare"),
+        ("Stopping by Woods on a Snowy Evening", "Robert Frost"),
+        ("Still I Rise", "Maya Angelou"),
     ]
 
     title, poet = choice(searchables)
