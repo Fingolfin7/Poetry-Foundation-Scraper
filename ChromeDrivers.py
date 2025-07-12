@@ -20,7 +20,7 @@ class ChromeDrivers:
         if not os.path.exists(self.CHROMEDRIVER_PATH):
             os.makedirs(self.CHROMEDRIVER_PATH)
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__ + "ChromeDriverHandler")
         logHandler = logging.StreamHandler(sys.stdout)
         logHandler.setFormatter(logging.Formatter('%(filename)s:%(lineno)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(logHandler)

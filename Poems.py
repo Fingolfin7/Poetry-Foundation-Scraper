@@ -1,16 +1,18 @@
 import os
 import json
 import random
-from scraper import scrape_poem
+import logging
+from scraper import PoetryScraper
 from ColourText import format_text
 from check_internet import check_internet
 
 
 class Poems:
-    def __init__(self, file="poems.json"):
+    def __init__(self, file="poems.json", log_level=logging.DEBUG):
         self.__dict = {}
         self.base_path = os.path.abspath(os.path.dirname(__file__))
         self.path = os.path.join(self.base_path, file)
+        self.scraper = PoetryScraper(log_level=log_level)
         self.__load()
 
     def __load(self):
@@ -93,7 +95,7 @@ class Poems:
         if poem_text is None and check_internet():
             print("Searching on the poetry foundation")
             try:
-                pTitle, pPoet, pBody = scrape_poem(title, poet)
+                pTitle, pPoet, pBody = self.scraper.scrape_poem(title, poet)
                 self.add_poem(pTitle, pPoet, pBody)
                 print(format_text(f"Found: [bright green][italic]'{pTitle}' by "
                                   f"'{pPoet}'[reset]"))
