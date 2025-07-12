@@ -133,8 +133,10 @@ class PoetryScraper:
                         found_poem_link = current_link_href
                         poem_title_final = html.unescape(
                             current_title_text_raw).strip()  # Use cleaned title from search result
+                        # Use regex to remove 'By ' (case-insensitive) only at the beginning
+                        cleaned_poet_text = re.sub(r'^By\s+', '', poet_text_raw, flags=re.IGNORECASE).strip()
                         poem_poet_final = html.unescape(
-                            poet_text_raw.replace("By", "").replace("by", "")).strip() if poet_span else ""
+                            cleaned_poet_text) if poet_span else ""  # No .strip() after unescape, as it's already stripped from regex
                         self.logger.debug(
                             f"Found exact match: '{poem_title_final}' by '{poem_poet_final}'. Link: {found_poem_link}")
                         break
@@ -286,23 +288,23 @@ if __name__ == "__main__":
     from random import choice
     from ColourText import format_text
 
-    scraper_instance = PoetryScraper(log_level=logging.INFO)
+    scraper_instance = PoetryScraper(log_level=logging.DEBUG)
     searchables = [
-        ("Once more unto the breach", "William Shakespeare"),
-        ("The Road Not Taken", "Robert Frost"),
-        ("The Second Coming", "William Butler Yeats"),
-        ("Do not go gentle into that good night", "Dylan Thomas"),
-        ("Ozymandias", "Percy Bysshe Shelley"),
-        ("If", "Rudyard Kipling"),
-        ("The Tyger", "William Blake"),
-        ("Kubla Khan", "Samuel Taylor Coleridge"),
-        ("Ode to a Nightingale", "John Keats"),
+        # ("Once more unto the breach", "William Shakespeare"),
+        # ("The Road Not Taken", "Robert Frost"),
+        # ("The Second Coming", "William Butler Yeats"),
+        # ("Do not go gentle into that good night", "Dylan Thomas"),
+        # ("Ozymandias", "Percy Bysshe Shelley"),
+        # ("If", "Rudyard Kipling"),
+        # ("The Tyger", "William Blake"),
+        # ("Kubla Khan", "Samuel Taylor Coleridge"),
+        # ("Ode to a Nightingale", "John Keats"),
         ("She Walks in Beauty", "Lord Byron"),
-        ("The Charge of the Light Brigade", "Alfred, Lord Tennyson"),
-        ("To His Coy Mistress", "Andrew Marvell"),
-        ("Sonnet 18", "William Shakespeare"),
-        ("Stopping by Woods on a Snowy Evening", "Robert Frost"),
-        ("Still I Rise", "Maya Angelou"),
+        # ("The Charge of the Light Brigade", "Alfred, Lord Tennyson"),
+        # ("To His Coy Mistress", "Andrew Marvell"),
+        # ("Sonnet 18", "William Shakespeare"),
+        # ("Stopping by Woods on a Snowy Evening", "Robert Frost"),
+        # ("Still I Rise", "Maya Angelou"),
     ]
 
     title, poet = choice(searchables)
