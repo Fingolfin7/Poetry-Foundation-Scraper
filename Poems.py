@@ -38,7 +38,6 @@ class Poems:
         json_data = json.dumps(self.__dict, indent=4)
         with open(self.path, "w") as js_writer:
             js_writer.write(json_data)
-            js_writer.close()
 
     def random_poem(self):
         return self.__search_dict(random.choice(list(self.__dict.keys())))
