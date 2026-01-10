@@ -30,11 +30,13 @@ class Poems:
         self.scraper = PoetryScraper(log_level=log_level)
 
     def get_dict(self):
-        """Deprecated: JSON-style dictionary export is no longer supported after ORM migration."""
-        raise NotImplementedError(
-            "get_dict() was removed. Use ORM methods (search(), list_all_by_poet(), "
-            "list_all_poets(), search_poems_with_term(), search_full_text()) instead."
-        )
+        """
+        Get all poems as dictionary (backward compatibility with JSON format)
+
+        Returns:
+            dict: {poet_name: {poem_title: poem_content}}
+        """
+        return self.db.export_to_dict()
 
     def add_poem(self, title, poet, poem):
         """
@@ -128,30 +130,29 @@ class Poems:
 
     def search_poems_with_term(self, search_term):
         """
-        Search for poems with a term in the title (DB-backed, single query)
+        Search for poems with a term in the title
 
         Args:
             search_term: Term to search for in poem titles
         """
         print(format_text(f"[bright yellow][italic]Poems with term: {search_term}[reset]"))
 
-        results = self.db.search_poem_titles(search_term=search_term, limit=500)
-        if not results:
-            print(format_text(f"[bright red]No poems found with term: {search_term}[reset]"))
-            return
+        # Use the ORM to search
+        all_poets = self.db.get_all_poets()
+        found_any = False
 
-        # Group by poet for display
-        current_poet = None
-        idx = 0
-        for row in results:
-            poet_name = row['poet']
-            title = row['title']
-            if poet_name != current_poet:
-                current_poet = poet_name
-                idx = 0
+        for poet_name, _ in all_poets:
+            poems = self.db.get_poems_by_poet(poet_name)
+            matching_poems = [p for p in poems if search_term.lower() in p['title'].lower()]
+
+            if matching_poems:
+                found_any = True
                 print(format_text(f"[bright yellow][italic]Poems by {poet_name}:[reset]"))
-            idx += 1
-            print(format_text(f"[bright yellow][italic]{idx}. {title}[reset]"))
+                for index, poem in enumerate(matching_poems):
+                    print(format_text(f"[bright yellow][italic]{index + 1}. {poem['title']}[reset]"))
+
+        if not found_any:
+            print(format_text(f"[bright red]No poems found with term: {search_term}[reset]"))
 
     def search_full_text(self, query, limit=50):
         """

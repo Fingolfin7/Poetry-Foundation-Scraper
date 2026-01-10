@@ -127,11 +127,10 @@ class EventHandlers:
                     poet_name = data[1]
                     poem_title = data[2]
 
-                    # Get the poem from the database
-                    poems_dict = self.app.poems.get_dict()
-                    if poet_name in poems_dict and poem_title in poems_dict[poet_name]:
-                        poem = poems_dict[poet_name][poem_title]
-                        poem = clean(poem, False)
+                    # Get the poem from the database (ORM-backed)
+                    poem_row = self.app.poems.db.get_poem_by_poet_and_title(poet_name, poem_title)
+                    if poem_row:
+                        poem = clean(poem_row['content'], False)
 
                         self.app.display_handlers.clear_results()
                         self.app.display_handlers.display_poem(poem_title, poet_name, poem)
@@ -225,4 +224,3 @@ class EventHandlers:
 responsive - you can still click around!
 """
         messagebox.showinfo("Help - How to Use", help_text)
-

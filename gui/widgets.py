@@ -62,6 +62,22 @@ class WidgetBuilder:
         self.app.poet_name_entry = ttk.Entry(search_frame, width=40, font=('Segoe UI', 11))
         self.app.poet_name_entry.grid(row=1, column=1, pady=8, padx=5, sticky=tk.EW)
 
+        # NEW: Full-text search query
+        ttk.Label(search_frame, text="Search Content:").grid(
+            row=2, column=0, sticky=tk.W, pady=8, padx=(5, 10)
+        )
+        self.app.fulltext_entry = ttk.Entry(search_frame, width=40, font=('Segoe UI', 11))
+        self.app.fulltext_entry.grid(row=2, column=1, pady=8, padx=5, sticky=tk.EW)
+
+        # Info label for full-text search
+        info_label = ttk.Label(
+            search_frame,
+            text="💡 Search inside poem text (e.g., 'love AND heart', '\"exact phrase\"')",
+            font=('Segoe UI', 8, 'italic'),
+            foreground='gray'
+        )
+        info_label.grid(row=3, column=1, sticky=tk.W, padx=5)
+
         search_frame.columnconfigure(1, weight=1)
 
         # Buttons
@@ -70,11 +86,17 @@ class WidgetBuilder:
     def _create_search_buttons(self, parent):
         """Create search action buttons"""
         button_frame = ttk.Frame(parent)
-        button_frame.grid(row=2, column=0, columnspan=2, pady=(15, 5))
+        button_frame.grid(row=4, column=0, columnspan=2, pady=(15, 5))
 
         ttk.Button(
             button_frame, text="🔍 Search",
             command=self.app.search_handlers.search_poem, width=12
+        ).pack(side=tk.LEFT, padx=4)
+
+        # NEW: Full-text search button
+        ttk.Button(
+            button_frame, text="📝 Search Content",
+            command=self.app.search_handlers.fulltext_search, width=14
         ).pack(side=tk.LEFT, padx=4)
 
         ttk.Button(

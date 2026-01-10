@@ -4,6 +4,7 @@ Handles all search-related functionality for poems.
 """
 
 import tkinter as tk
+from tkinter import messagebox
 import threading
 from clean_encoding import clean
 
@@ -25,7 +26,7 @@ class SearchHandlers:
         poet_name = self.app.poet_name_entry.get().strip()
 
         if not poem_name and not poet_name:
-            tk.messagebox.showwarning("Input Required",
+            messagebox.showwarning("Input Required",
                                      "Please enter a poem name or poet name.")
             return
 
@@ -36,9 +37,8 @@ class SearchHandlers:
         search_name = clean(poem_name) if poem_name else ""
         search_poet = clean(poet_name) if poet_name else ""
 
-        # First check local database
-        poems_dict = self.app.poems.get_dict()
-        title, poet, poem = self._search_local(search_name, search_poet, poems_dict)
+        # DB-backed local search (single query)
+        title, poet, poem = self._search_local(search_name, search_poet)
 
         if poem:
             # Found locally
@@ -63,14 +63,12 @@ class SearchHandlers:
             )
             search_thread.start()
 
-    def _search_local(self, title, poet, poems_dict):
-        """Search for a poem in local database"""
-        for key in poems_dict:
-            if poet.lower() in key.lower():
-                for poem_title in poems_dict[key]:
-                    if title.lower() in poem_title.lower():
-                        return poem_title, key, poems_dict[key][poem_title]
-        return None, None, None
+    def _search_local(self, title, poet):
+        """Search for a poem in local database (ORM-backed)."""
+        result = self.app.poems.db.search_poems(title=title, poet_name=poet)
+        if not result:
+            return None, None, None
+        return result['title'], result['poet'], result['content']
 
     def _search_online_thread(self, search_name, search_poet):
         """Search online in a background thread"""
@@ -113,3 +111,81 @@ class SearchHandlers:
         self.app.results_text.insert(tk.END, f"Error during search: {error_msg}\n", 'error')
         self.app.status_var.set("Search error occurred")
 
+    def fulltext_search(self):
+        """
+        NEW: Full-text search in poem content using FTS5
+        Searches inside the actual text of poems
+        """
+        query = self.app.fulltext_entry.get().strip()
+
+        if not query:
+            messagebox.showwarning("Input Required",
+                                     "Please enter a search query.")
+            return
+
+        self.app.status_var.set("Searching poem content...")
+        self.app.display_handlers.clear_results()
+        self.app.root.update()
+
+        # Run search in background thread
+        search_thread = threading.Thread(
+            target=self._fulltext_search_thread,
+            args=(query,),
+            daemon=True
+        )
+        search_thread.start()
+
+    def _fulltext_search_thread(self, query):
+        """Run full-text search in background thread"""
+        try:
+            results = self.app.poems.search_full_text(query, limit=50)
+            self.app.root.after(0, self._handle_fulltext_results, query, results)
+        except Exception as e:
+            self.app.root.after(0, self._handle_search_error, str(e))
+
+    def _handle_fulltext_results(self, query, results):
+        """Display full-text search results on main thread"""
+        self.app.display_handlers.clear_results()
+
+        if results:
+            self.app.results_text.insert(
+                tk.END,
+                f"🔍 Full-Text Search Results for: '{query}'\n",
+                'title'
+            )
+            self.app.results_text.insert(
+                tk.END,
+                f"Found {len(results)} poems matching your search\n\n",
+                'info'
+            )
+
+            for i, (poem_id, title, poet_name, content, rank) in enumerate(results, 1):
+                # Make title clickable
+                self.app.results_text.insert(tk.END, f"{i}. ", 'info')
+                self.app.results_text.insert(tk.END, f"'{title}'", 'poem_link')
+                self.app.results_text.insert(tk.END, f" by ", 'info')
+                self.app.results_text.insert(tk.END, f"{poet_name}", 'poet_link')
+                self.app.results_text.insert(tk.END, f"\n", 'info')
+
+                # Show snippet of matching content (first 150 chars)
+                snippet = content[:150].replace('\n', ' ') + "..." if len(content) > 150 else content
+                self.app.results_text.insert(tk.END, f"   {snippet}\n\n", 'poem_text')
+
+            self.app.status_var.set(f"Found {len(results)} poems matching '{query}'")
+        else:
+            self.app.results_text.insert(
+                tk.END,
+                f"No poems found matching: '{query}'\n\n",
+                'error'
+            )
+            self.app.results_text.insert(
+                tk.END,
+                "💡 Try different keywords or use AND/OR operators\n",
+                'info'
+            )
+            self.app.results_text.insert(
+                tk.END,
+                "   Examples: 'love AND heart', '\"exact phrase\"', 'NEAR(death life, 5)'\n",
+                'info'
+            )
+            self.app.status_var.set("No results found")

@@ -65,4 +65,3 @@ class PoemAppGUI:
 
         # Bind all events
         self.widget_builder.bind_events()
-
