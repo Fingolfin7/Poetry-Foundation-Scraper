@@ -1,6 +1,7 @@
 """
-Poems class refactored to use SQLAlchemy ORM instead of JSON
-This maintains backward compatibility with the existing API
+Poems facade backed by a SQLite database via SQLAlchemy ORM.
+
+All searches and listings are database-backed (no JSON export/filtering).
 """
 import os
 import random
@@ -29,12 +30,7 @@ class Poems:
         # Initialize scraper for online searches
         self.scraper = PoetryScraper(log_level=log_level)
 
-    def get_dict(self):
-        """Deprecated: JSON-style dictionary export is no longer supported after ORM migration."""
-        raise NotImplementedError(
-            "get_dict() was removed. Use ORM methods (search(), list_all_by_poet(), "
-            "list_all_poets(), search_poems_with_term(), search_full_text()) instead."
-        )
+    # get_dict() removed: application is DB/ORM-only.
 
     def add_poem(self, title, poet, poem):
         """
@@ -71,21 +67,12 @@ class Poems:
         poets = self.db.get_all_poets()
         if poets:
             random_poet = random.choice(poets)[0]
-            return self.__search_dict("", random_poet)
+            return self.__search_db("", random_poet)
 
         return None, None, None
 
-    def __search_dict(self, title, poet=""):
-        """
-        Private method to search in database
-
-        Args:
-            title: Title to search for
-            poet: Poet name to search for
-
-        Returns:
-            tuple: (title, poet, content) or (None, None, None)
-        """
+    def __search_db(self, title, poet=""):
+        """Private helper to search the local SQLite database (ORM-backed)."""
         poem = self.db.search_poems(title=title, poet_name=poet)
         if poem:
             print(
@@ -196,7 +183,7 @@ class Poems:
             tuple: (title, poet, content) or (None, None, None)
         """
         # Search in local database first
-        poem_title, poem_poet, poem_text = self.__search_dict(title, poet)
+        poem_title, poem_poet, poem_text = self.__search_db(title, poet)
 
         # If not found locally and internet is available, search online
         if poem_text is None and check_internet():
@@ -236,4 +223,3 @@ class Poems:
             'total_poems': self.db.get_poem_count(),
             'poets': self.db.get_all_poets()
         }
-

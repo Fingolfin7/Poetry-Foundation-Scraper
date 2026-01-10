@@ -321,24 +321,6 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def export_to_dict(self):
-        """
-        Export entire database to dictionary format (compatible with old JSON format)
-
-        Returns:
-            dict: {poet_name: {poem_title: poem_content}}
-        """
-        session = self.get_session()
-        try:
-            result = {}
-            poets = session.query(Poet).all()
-            for poet in poets:
-                result[poet.name] = {
-                    poem.title: poem.content for poem in poet.poems
-                }
-            return result
-        finally:
-            session.close()
 
     def get_poets_with_counts(self):
         """Get all poets with poem counts using a single grouped query."""

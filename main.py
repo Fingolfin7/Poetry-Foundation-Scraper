@@ -22,15 +22,11 @@ def main():
         choice = input(format_text("\n[bright yellow]Choose an option (1-5):[reset] ")).strip()
 
         if choice == '1':
-            # Original search by title/poet
+            # Search by title/poet
             search_name = input("Enter poem name: ").strip()
             search_poet = input("Enter poet: ").strip()
 
-            # clean the input to match the format in the poems.json file
-            search_name = clean(search_name)
-            search_poet = clean(search_poet)
-
-            # clean the input to match the format in the poems.json file
+            # Clean the input
             search_name = clean(search_name)
             search_poet = clean(search_poet)
 
