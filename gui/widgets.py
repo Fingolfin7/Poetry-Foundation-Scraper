@@ -163,7 +163,7 @@ class WidgetBuilder:
 
     def create_results_frame(self):
         """Create results display area"""
-        results_frame = ttk.LabelFrame(self.app.root, text="  📖 Results  ", padding=15)
+        results_frame = ttk.LabelFrame(self.app.root, text="  📖 Results  ", padding=(15, 20))
         results_frame.pack(pady=(0, 10), padx=20, fill=tk.BOTH, expand=True)
 
         # Text widget with scrollbar
@@ -171,8 +171,9 @@ class WidgetBuilder:
             results_frame,
             wrap=tk.WORD,
             font=('Georgia', 11),
-            padx=15,
-            pady=15,
+            padx=18,
+            pady=18,
+            height=22,
             bg='#ffffff',
             fg=AppStyles.TEXT_COLOR,
             relief=tk.FLAT,
@@ -215,4 +216,3 @@ class WidgetBuilder:
                                       lambda e: self.app.results_text.config(cursor='hand2'))
         self.app.results_text.tag_bind('clickable_poem', '<Leave>',
                                       lambda e: self.app.results_text.config(cursor=''))
-

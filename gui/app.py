@@ -24,8 +24,8 @@ class PoemAppGUI:
         """
         self.root = root
         self.root.title("Poetry Foundation Explorer")
-        self.root.geometry("1000x750")
-        self.root.minsize(800, 600)
+        self.root.geometry("1100x820")
+        self.root.minsize(900, 650)
 
         # Initialize Poems data object
         self.poems = Poems()
