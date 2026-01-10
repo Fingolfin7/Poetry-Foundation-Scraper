@@ -160,12 +160,23 @@ class SearchHandlers:
             )
 
             for i, (poem_id, title, poet_name, content, rank) in enumerate(results, 1):
-                # Make title clickable
                 self.app.results_text.insert(tk.END, f"{i}. ", 'info')
-                self.app.results_text.insert(tk.END, f"'{title}'", 'poem_link')
-                self.app.results_text.insert(tk.END, f" by ", 'info')
-                self.app.results_text.insert(tk.END, f"{poet_name}", 'poet_link')
-                self.app.results_text.insert(tk.END, f"\n", 'info')
+
+                # Clickable poem title
+                start_idx = self.app.results_text.index(tk.INSERT)
+                self.app.results_text.insert(tk.END, f"'{title}'", 'clickable_poem')
+                end_idx = self.app.results_text.index(tk.INSERT)
+                self.app.clickable_data[f"{start_idx}:{end_idx}"] = ('poem', poet_name, title)
+
+                self.app.results_text.insert(tk.END, " by ", 'info')
+
+                # Clickable poet
+                poet_start = self.app.results_text.index(tk.INSERT)
+                self.app.results_text.insert(tk.END, f"{poet_name}", 'clickable_poet')
+                poet_end = self.app.results_text.index(tk.INSERT)
+                self.app.clickable_data[f"{poet_start}:{poet_end}"] = ('poet', poet_name)
+
+                self.app.results_text.insert(tk.END, "\n", 'info')
 
                 # Show snippet of matching content (first 150 chars)
                 snippet = content[:150].replace('\n', ' ') + "..." if len(content) > 150 else content

@@ -207,6 +207,12 @@ class WidgetBuilder:
         self.app.results_text.tag_bind('clickable_poem', '<Button-1>',
                                       self.app.event_handlers.on_poem_click)
 
+        # Backward/alternate tags used by full-text results (if any)
+        self.app.results_text.tag_bind('poet_link', '<Button-1>',
+                                      self.app.event_handlers.on_poet_click)
+        self.app.results_text.tag_bind('poem_link', '<Button-1>',
+                                      self.app.event_handlers.on_poem_click)
+
         # Cursor hover effects
         self.app.results_text.tag_bind('clickable_poet', '<Enter>',
                                       lambda e: self.app.results_text.config(cursor='hand2'))
@@ -215,4 +221,13 @@ class WidgetBuilder:
         self.app.results_text.tag_bind('clickable_poem', '<Enter>',
                                       lambda e: self.app.results_text.config(cursor='hand2'))
         self.app.results_text.tag_bind('clickable_poem', '<Leave>',
+                                      lambda e: self.app.results_text.config(cursor=''))
+
+        self.app.results_text.tag_bind('poet_link', '<Enter>',
+                                      lambda e: self.app.results_text.config(cursor='hand2'))
+        self.app.results_text.tag_bind('poet_link', '<Leave>',
+                                      lambda e: self.app.results_text.config(cursor=''))
+        self.app.results_text.tag_bind('poem_link', '<Enter>',
+                                      lambda e: self.app.results_text.config(cursor='hand2'))
+        self.app.results_text.tag_bind('poem_link', '<Leave>',
                                       lambda e: self.app.results_text.config(cursor=''))
