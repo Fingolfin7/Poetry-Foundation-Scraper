@@ -35,6 +35,11 @@ class EventHandlers:
         self.text_context_menu.add_separator()
         self.text_context_menu.add_command(label="Select All", command=self.select_all_text)
 
+        # NEW: DB actions for the currently displayed poem
+        self.text_context_menu.add_separator()
+        self.text_context_menu.add_command(label="Delete poem from database", command=self.delete_current_poem)
+        self.text_context_menu.add_command(label="Overwrite from web (refresh)", command=self.overwrite_current_poem_from_web)
+
     def show_context_menu(self, event):
         """Show context menu for entry widgets"""
         self.focused_widget = event.widget
@@ -224,3 +229,83 @@ class EventHandlers:
 responsive - you can still click around!
 """
         messagebox.showinfo("Help - How to Use", help_text)
+
+    def delete_current_poem(self):
+        """Delete the currently displayed poem from the local database."""
+        if not self.app.current_poem_data:
+            messagebox.showwarning(
+                "No Poem Selected",
+                "Please display a poem first (open one from results) before deleting."
+            )
+            return
+
+        title, poet, _poem = self.app.current_poem_data
+
+        if not messagebox.askyesno(
+            "Delete poem?",
+            f"Delete this poem from your local database?\n\n'{title}'\nby {poet}\n\nThis cannot be undone."
+        ):
+            return
+
+        try:
+            deleted = self.app.poems.db.delete_poem_by_poet_and_title(poet, title)
+            if deleted:
+                self.app.display_handlers.clear_results()
+                self.app.current_poem_data = None
+                self.app.status_var.set(f"Deleted: '{title}' by {poet}")
+                messagebox.showinfo("Deleted", "Poem deleted from database.")
+            else:
+                messagebox.showinfo("Not found", "That poem wasn't found in the database.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not delete poem:\n{str(e)}")
+            self.app.status_var.set("✗ Error deleting poem")
+
+    def overwrite_current_poem_from_web(self):
+        """Re-scrape the currently displayed poem from the web and overwrite the DB entry."""
+        if not self.app.current_poem_data:
+            messagebox.showwarning(
+                "No Poem Selected",
+                "Please display a poem first before refreshing from the web."
+            )
+            return
+
+        title, poet, _poem = self.app.current_poem_data
+
+        if not messagebox.askyesno(
+            "Overwrite from web?",
+            f"Re-download and overwrite your local copy with a fresh version from Poetry Foundation?\n\n'{title}'\nby {poet}"
+        ):
+            return
+
+        # Run scrape in background so UI stays responsive
+        import threading
+
+        self.app.status_var.set("🌐 Refreshing from web...")
+        self.app.root.update()
+
+        def _worker():
+            try:
+                pTitle, pPoet, pBody = self.app.poems.scraper.scrape_poem(title, poet)
+                # add_poem() already updates existing rows (overwrite)
+                self.app.poems.add_poem(pTitle, pPoet, pBody)
+
+                from clean_encoding import clean
+                pBodyClean = clean(pBody, False)
+
+                # Update UI on main thread
+                self.app.root.after(0, lambda: self._finish_overwrite_from_web(pTitle, pPoet, pBodyClean))
+            except Exception as e:
+                self.app.root.after(0, lambda: self._finish_overwrite_error(str(e)))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _finish_overwrite_from_web(self, title: str, poet: str, poem: str):
+        self.app.display_handlers.clear_results()
+        self.app.display_handlers.display_poem(title, poet, poem)
+        self.app.current_poem_data = (title, poet, poem)
+        self.app.status_var.set(f"✓ Refreshed: '{title}' by {poet}")
+        messagebox.showinfo("Updated", "Poem refreshed from the web and saved to the database.")
+
+    def _finish_overwrite_error(self, msg: str):
+        self.app.status_var.set("✗ Error refreshing from web")
+        messagebox.showerror("Error", f"Could not refresh poem from the web:\n{msg}")

@@ -151,6 +151,18 @@ class WidgetBuilder:
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
         ttk.Button(
+            action_frame, text="🔁 Overwrite from Web",
+            command=self.app.event_handlers.overwrite_current_poem_from_web,
+            style='Action.TButton', width=20
+        ).pack(side=tk.LEFT, padx=5, pady=5)
+
+        ttk.Button(
+            action_frame, text="🗑️ Delete from DB",
+            command=self.app.event_handlers.delete_current_poem,
+            style='Action.TButton', width=16
+        ).pack(side=tk.LEFT, padx=5, pady=5)
+
+        ttk.Button(
             action_frame, text="📋 Copy to Clipboard",
             command=self.app.event_handlers.copy_to_clipboard,
             style='Action.TButton', width=20

@@ -80,46 +80,76 @@ class DatabaseManager:
         self._init_fts5()
 
     def _init_fts5(self):
-        """Initialize FTS5 virtual table and triggers for full-text search"""
+        """Initialize FTS5 virtual table and triggers for full-text search.
+
+        This project originally used an external-content FTS5 table. Some existing databases
+        have a legacy FTS configuration that can break on UPDATE with:
+            "no such column: T.poet_name"
+
+        To be robust across SQLite/FTS versions and old DBs, we:
+        - Drop any legacy triggers
+        - Ensure poems_fts exists as a *standalone* FTS5 table (no content=...)
+        - Create simple triggers that insert/update/delete into poems_fts
+        - Rebuild the index from scratch on startup
+        """
         with self.engine.connect() as conn:
-            # Create FTS5 virtual table
+            # Drop any legacy triggers
+            conn.execute(text("DROP TRIGGER IF EXISTS poems_ai"))
+            conn.execute(text("DROP TRIGGER IF EXISTS poems_ad"))
+            conn.execute(text("DROP TRIGGER IF EXISTS poems_au"))
+
+            # Drop existing FTS table if it's from an old/broken schema
+            conn.execute(text("DROP TABLE IF EXISTS poems_fts"))
+            conn.commit()
+
+            # Standalone FTS table: we manage its contents ourselves
             conn.execute(text("""
-                CREATE VIRTUAL TABLE IF NOT EXISTS poems_fts USING fts5(
+                CREATE VIRTUAL TABLE poems_fts USING fts5(
                     title,
                     content,
                     poet_name,
-                    content='poems',
-                    content_rowid='id'
+                    poem_id UNINDEXED
                 )
             """))
 
-            # Trigger to keep FTS5 in sync when poems are inserted
+            # Triggers to keep poems_fts in sync
             conn.execute(text("""
-                CREATE TRIGGER IF NOT EXISTS poems_ai AFTER INSERT ON poems BEGIN
-                    INSERT INTO poems_fts(rowid, title, content, poet_name)
-                    SELECT new.id, new.title, new.content, poets.name
-                    FROM poets WHERE poets.id = new.poet_id;
+                CREATE TRIGGER poems_ai AFTER INSERT ON poems BEGIN
+                    INSERT INTO poems_fts(title, content, poet_name, poem_id)
+                    SELECT new.title, new.content, p.name, new.id
+                    FROM poets p WHERE p.id = new.poet_id;
                 END
             """))
 
-            # Trigger to keep FTS5 in sync when poems are deleted
             conn.execute(text("""
-                CREATE TRIGGER IF NOT EXISTS poems_ad AFTER DELETE ON poems BEGIN
-                    DELETE FROM poems_fts WHERE rowid = old.id;
+                CREATE TRIGGER poems_ad AFTER DELETE ON poems BEGIN
+                    DELETE FROM poems_fts WHERE poem_id = old.id;
                 END
             """))
 
-            # Trigger to keep FTS5 in sync when poems are updated
             conn.execute(text("""
-                CREATE TRIGGER IF NOT EXISTS poems_au AFTER UPDATE ON poems BEGIN
-                    DELETE FROM poems_fts WHERE rowid = old.id;
-                    INSERT INTO poems_fts(rowid, title, content, poet_name)
-                    SELECT new.id, new.title, new.content, poets.name
-                    FROM poets WHERE poets.id = new.poet_id;
+                CREATE TRIGGER poems_au AFTER UPDATE ON poems BEGIN
+                    UPDATE poems_fts
+                    SET title = new.title,
+                        content = new.content,
+                        poet_name = (SELECT name FROM poets WHERE id = new.poet_id)
+                    WHERE poem_id = new.id;
                 END
+            """))
+
+            # Populate from current DB state
+            conn.execute(text("""
+                INSERT INTO poems_fts(title, content, poet_name, poem_id)
+                SELECT po.title, po.content, pe.name, po.id
+                FROM poems po
+                JOIN poets pe ON pe.id = po.poet_id;
             """))
 
             conn.commit()
+
+    def rebuild_fts(self) -> None:
+        """Force rebuild of the FTS index."""
+        self._init_fts5()
 
     def get_session(self):
         """Get a new database session"""
@@ -231,7 +261,7 @@ class DatabaseManager:
                     p.content,
                     poems_fts.rank
                 FROM poems_fts
-                JOIN poems p ON poems_fts.rowid = p.id
+                JOIN poems p ON poems_fts.poem_id = p.id
                 JOIN poets po ON p.poet_id = po.id
                 WHERE poems_fts MATCH :search_term
                 ORDER BY rank
@@ -373,5 +403,45 @@ class DatabaseManager:
             q = q.order_by(Poet.name, Poem.title).limit(limit)
             rows = q.all()
             return [{'title': t, 'poet': p} for (t, p) in rows]
+        finally:
+            session.close()
+
+    def poem_exists(self, title: str, poet_name: str) -> bool:
+        """Return True if a poem exists for the exact (title, poet_name) pair."""
+        session = self.get_session()
+        try:
+            return (
+                session.query(Poem)
+                .join(Poet)
+                .filter(Poem.title == title, Poet.name == poet_name)
+                .first()
+                is not None
+            )
+        finally:
+            session.close()
+
+    def delete_poem_by_poet_and_title(self, poet_name: str, title: str) -> bool:
+        """Delete a single poem by exact poet name and exact title.
+
+        Returns:
+            bool: True if a row was deleted, False if not found.
+        """
+        session = self.get_session()
+        try:
+            poem = (
+                session.query(Poem)
+                .join(Poet)
+                .filter(Poet.name == poet_name, Poem.title == title)
+                .first()
+            )
+            if not poem:
+                return False
+
+            session.delete(poem)
+            session.commit()
+            return True
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
