@@ -169,5 +169,12 @@ class ChromeDrivers:
 
 if __name__ == "__main__":
     manager = ChromeDrivers(log_level=logging.DEBUG)
-    driver = manager.get_driver()
+    chrome_options = webdriver.ChromeOptions()
+
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-gpu')
+
+    driver = manager.get_driver(options=chrome_options)
     print(format_text(f"[green]ChromeDriver initialized successfully![reset]"))
