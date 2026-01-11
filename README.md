@@ -6,9 +6,11 @@ through the large of poems they have.
 I thought it was a good idea to practice making web-scrapers while building a personal offline collection of poems 
 that I could read whenever I wanted. 
 
-Along the way I found a large number of poems on Kaggle (can't remember exactle where from) and decided to include 
+Along the way I found a large number of poems on Kaggle (can't remember exactly where from) and decided to include 
 those files in a cleaned up/formatted json file (poems_old.json) with the project as a starter.
 This project is the result of that effort.
+
+<img width="1377" height="1014" alt="534302338-69dfb25e-6ffd-4c7d-8a26-c44281792458" src="https://github.com/user-attachments/assets/3097ad84-5139-4ad3-899a-253f4df665c8" />
 
 ## Project Structure
 
