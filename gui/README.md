@@ -107,21 +107,9 @@ font=('Georgia', 11)   # For poem text
 - Ensure all dependencies are installed: `pip install -r requirements.txt`
 - Check that the `gui/` directory is in the same folder as `gui_app.py`
 
-### Poems Not Found
-- The application needs `poems.json` for local searches
-- Online search requires internet connection
-
-### Visual Issues
-- The app is optimized for Windows with Segoe UI font
-- Minimum window size: 800x600
-
 ## 🔗 Related Files
 
 - **gui_main.py**: Original monolithic version (kept for reference)
 - **main.py**: Command-line interface version
 - **Poems.py**: Core poem data handling class
-
-## 📄 License
-
-See main README.md for project license information.
 
