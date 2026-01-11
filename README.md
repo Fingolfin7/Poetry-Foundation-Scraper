@@ -10,18 +10,29 @@ Along the way I found a large number of poems on Kaggle (can't remember exactle 
 those files in a cleaned up/formatted json file (poems_old.json) with the project as a starter.
 This project is the result of that effort.
 
-## Project Files
-The following are the more important files in the project:
-- `main`: allows the user to search specific poems by title, author and then prints them to the console. 
-  Users can also save the poems to a separate text file.
-- `random_poem.py`: get a random poem from the collection and print it to the console.
-- `Poems.py`: contains the main `Poems` class that is used to scrape the poems from the Poetry Foundation website.
-- `scraper.py`: contains a function that does the actual scraping of the poems from the website.
-- `ChromeDrivers.py`: the file that contains a custom manager class for creating a chrome driver instance and or downloading 
-  the appropriate driver for the user's version of Chrome to the project directory if it doesn't exist.
-- `poems_old.json`: contains poems from the Kaggle csv file I found in a cleaned up format. 
-(this is normally separate from your main save file, poems.json, but you can always rename it and use 
-these as a starting point)
+## Project Structure
+
+### Main Applications
+- **`gui_app.py`**: 🎨 **NEW!** Modern graphical user interface (recommended)
+- **`main.py`**: Command-line interface for searching and saving poems
+- **`random_poem.py`**: Get a random poem from the collection
+
+### GUI Package (`gui/`)
+The GUI has been refactored into a clean, modular structure:
+- **`app.py`**: Main application class
+- **`styles.py`**: Theming and color configuration
+- **`widgets.py`**: Widget creation and layout
+- **`search_handlers.py`**: Search functionality
+- **`display_handlers.py`**: Display operations
+- **`event_handlers.py`**: Event handling
+- **`README.md`**: Detailed GUI documentation
+
+### Core Files
+- **`Poems.py`**: Main `Poems` class for scraping and managing poems
+- **`scraper.py`**: Web scraping functionality
+- **`ChromeDrivers.py`**: Chrome WebDriver manager
+- **`poems.json`**: Your personal poem collection (auto-created)
+- **`poems_old.json`**: Starter collection from Kaggle dataset
 
 ## Setup
 
@@ -38,13 +49,50 @@ from the Poetry Foundation website.
 
 ## Usage
 
-Pretty simple, run the `main` file and follow the prompts to search for poems by title or author. 
+### 🎨 Graphical Interface (Recommended)
+
+Run the GUI application for the best experience:
+
+```cmd
+python gui_app.py
+```
+
+Features:
+- Modern, intuitive interface with clickable links
+- Search locally and online seamlessly
+- Browse all poets and their poems
+- Random poem discovery
+- Save poems to custom locations
+- Copy to clipboard functionality
+- Right-click context menus
+- Responsive design with background searches
+
+See `gui/README.md` for detailed documentation.
+
+### 💻 Command-Line Interface
+
+For terminal users, run the classic CLI:
+
+```cmd
+python main.py
+```
+
+Pretty simple - follow the prompts to search for poems by title or author. 
 After each search, you can choose to save the poem to a text file or continue searching. Saved text files are stored in
 the `File Saves` directory in the project folder.
+
+### 🎲 Random Poem
+
+Get a random poem from your collection:
+
+```cmd
+python random_poem.py
+```
+
+### How It Works
 
 All searches are automatically saved to the `poems.json` file for offline searching. Future searches will first search 
 the offline collection before scraping the website for faster results.
 
-If you'd like to get a random poem from the collection, run the `random_poem.py` file.
 
 

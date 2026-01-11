@@ -4,6 +4,8 @@ import re
 import html
 from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
+from selenium import webdriver
+
 from clean_encoding import clean
 from ChromeDrivers import ChromeDrivers
 
@@ -48,7 +50,14 @@ class PoetryScraper:
         """
         driver = None  # Initialize driver to None
         try:
-            driver = self.chrome_driver_manager.get_driver()
+            chrome_options = webdriver.ChromeOptions()
+
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            # chrome_options.add_argument('--headless=new')  # Use new headless mode
+            chrome_options.add_argument('--disable-dev-shm-usage')
+
+            driver = self.chrome_driver_manager.get_driver(options=chrome_options)
+
             title = clean(title)
             search_url = f"{self.BASE_URL}/search?query={quote_plus(title)}"
             driver.get(search_url)
@@ -62,6 +71,9 @@ class PoetryScraper:
                 WebDriverWait(driver, 20).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'div.ais-Hits article[data-layout="Inline"]'))
                 )
+                page_source = driver.page_source
+                self.logger.debug(f"Page source contains 'ais-Hits': {'ais-Hits' in page_source}")
+
             except Exception as e:
                 raise Exception(f"Timeout waiting for search results to load for '{title}': {e}")
 
@@ -290,10 +302,12 @@ if __name__ == "__main__":
 
     scraper_instance = PoetryScraper(log_level=logging.DEBUG)
     searchables = [
+        #('lend me your ears', "William Shakespeare"),
+        # ("A Visit from St. Nicholas", "Clement Clarke Moore"),
         # ("Once more unto the breach", "William Shakespeare"),
         # ("The Road Not Taken", "Robert Frost"),
          ("The Second Coming", "William Butler Yeats"),
-        # ("Do not go gentle into that good night", "Dylan Thomas"),
+         ("Do not go gentle into that good night", "Dylan Thomas"),
         # ("Ozymandias", "Percy Bysshe Shelley"),
         # ("If", "Rudyard Kipling"),
         # ("The Tyger", "William Blake"),
@@ -304,7 +318,7 @@ if __name__ == "__main__":
         # ("To His Coy Mistress", "Andrew Marvell"),
         # ("Sonnet 18", "William Shakespeare"),
         # ("Stopping by Woods on a Snowy Evening", "Robert Frost"),
-        # ("Still I Rise", "Maya Angelou"),
+         ("Still I Rise", "Maya Angelou"),
     ]
 
     title, poet = choice(searchables)
