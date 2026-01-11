@@ -2,7 +2,7 @@
 
 ## Introduction
 I came across the [Poetry Foundation](https://www.poetryfoundation.org/) website and spent a lot of time reading 
-through the large of poems they have. 
+through the large collection of poems they have. 
 I thought it was a good idea to practice making web-scrapers while building a personal offline collection of poems 
 that I could read whenever I wanted. 
 
