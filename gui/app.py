@@ -3,9 +3,9 @@ Main Application Module
 The main PoemAppGUI class that orchestrates all components.
 """
 
-import tkinter as tk
 from tkinter import ttk
 from Poems import Poems
+from app_paths import resource_path
 from gui.styles import AppStyles
 from gui.widgets import WidgetBuilder
 from gui.search_handlers import SearchHandlers
@@ -26,6 +26,16 @@ class PoemAppGUI:
         self.root.title("Poetry Foundation Explorer")
         self.root.geometry("1100x820")
         self.root.minsize(900, 650)
+
+        # Set an app icon (prefer Windows .ico, fallback to .xbm)
+        try:
+            self.root.iconbitmap(resource_path("assets/app_icon.ico"))
+        except Exception:
+            try:
+                self.root.iconbitmap("@" + resource_path("assets/app_icon.xbm"))
+            except Exception:
+                # If icon setting fails (platform/theme), ignore.
+                pass
 
         # Initialize Poems data object
         self.poems = Poems()

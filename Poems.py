@@ -10,6 +10,7 @@ from scraper import PoetryScraper
 from ColourText import format_text
 from check_internet import check_internet
 from models import DatabaseManager
+from app_paths import get_runtime_dir
 
 
 class Poems:
@@ -21,8 +22,9 @@ class Poems:
             db_path: Path to SQLite database file (default: poems.db)
             log_level: Logging level for scraper
         """
-        self.base_path = os.path.abspath(os.path.dirname(__file__))
-        self.db_path = os.path.join(self.base_path, db_path)
+        # Store DB next to the running entry point (exe folder in frozen mode).
+        runtime_dir = get_runtime_dir()
+        self.db_path = os.path.join(runtime_dir, db_path)
 
         # Initialize database manager (ORM)
         self.db = DatabaseManager(self.db_path)

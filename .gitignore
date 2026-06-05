@@ -155,3 +155,5 @@ backup.json
 .idea/misc.xml
 poems.json
 /chromedriver/
+/release
+build_exe.ps1

@@ -7,3 +7,5 @@ webdriver_manager
 googlesearch-python
 lxml
 sqlalchemy>=2.0.0
+pyinstaller
+pillow
